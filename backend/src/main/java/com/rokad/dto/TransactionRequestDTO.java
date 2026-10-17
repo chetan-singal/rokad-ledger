@@ -5,8 +5,4 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 public record TransactionRequestDTO(
-    LocalDate transactionDate,
-    TransactionType transactionType,
-    BigDecimal amount,
-    String reason
-) {}
+    LocalDate transactionDate, TransactionType transactionType, BigDecimal amount, String reason) {}

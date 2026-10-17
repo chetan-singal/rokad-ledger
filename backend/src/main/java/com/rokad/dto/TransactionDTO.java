@@ -13,5 +13,4 @@ public record TransactionDTO(
     BigDecimal amount,
     String reason,
     LocalDateTime createdAt,
-    LocalDateTime updatedAt
-) {}
+    LocalDateTime updatedAt) {}

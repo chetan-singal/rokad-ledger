@@ -1,5 +1,3 @@
 package com.rokad.dto;
 
-public class LedgerSummaryDTO {
-    
-}
+public class LedgerSummaryDTO {}
