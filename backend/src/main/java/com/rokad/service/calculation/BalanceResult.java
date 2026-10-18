@@ -9,12 +9,8 @@ public record BalanceResult(
     BigDecimal totalDebit,
     BigDecimal totalCredit,
     BigDecimal closingBalance,
-    List<RunningBalanceEntry> runningBalances
-) {
+    List<RunningBalanceEntry> runningBalances) {
 
-    public record RunningBalanceEntry(
-        Long transactionId,
-        LocalDate transactionDate,
-        BigDecimal balanceAfter
-    ) {}
+  public record RunningBalanceEntry(
+      Long transactionId, LocalDate transactionDate, BigDecimal balanceAfter) {}
 }
