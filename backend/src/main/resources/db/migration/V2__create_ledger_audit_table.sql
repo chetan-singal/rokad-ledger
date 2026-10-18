@@ -1,0 +1,9 @@
+CREATE TABLE ledger_audit (
+    audit_id      BIGINT AUTO_INCREMENT PRIMARY KEY,
+    action        ENUM('TRANSACTION_CREATE','TRANSACTION_UPDATE','TRANSACTION_DELETE',
+                       'LEDGER_VERIFY','LEDGER_CLOSE','BACKUP','RESTORE') NOT NULL,
+    entity_type   VARCHAR(50)   NOT NULL,
+    entity_id     BIGINT        NULL,
+    performed_at  TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    details       VARCHAR(1000) NULL
+) ENGINE = InnoDB DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;

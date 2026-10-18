@@ -1,0 +1,11 @@
+package com.rokad.entity;
+
+public enum AuditAction {
+  TRANSACTION_CREATE,
+  TRANSACTION_UPDATE,
+  TRANSACTION_DELETE,
+  LEDGER_VERIFY,
+  LEDGER_CLOSE,
+  BACKUP,
+  RESTORE
+}
