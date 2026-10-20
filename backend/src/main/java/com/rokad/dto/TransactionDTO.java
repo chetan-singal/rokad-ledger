@@ -1,5 +1,6 @@
 package com.rokad.dto;
 
+import com.rokad.entity.Transaction;
 import com.rokad.entity.TransactionType;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -13,4 +14,17 @@ public record TransactionDTO(
     BigDecimal amount,
     String reason,
     LocalDateTime createdAt,
-    LocalDateTime updatedAt) {}
+    LocalDateTime updatedAt) {
+
+  public static TransactionDTO from(Transaction t) {
+    return new TransactionDTO(
+        t.getTransactionId(),
+        t.getLedger().getLedgerId(),
+        t.getTransactionDate(),
+        t.getTransactionType(),
+        t.getAmount(),
+        t.getReason(),
+        t.getCreatedAt(),
+        t.getUpdatedAt());
+  }
+}
