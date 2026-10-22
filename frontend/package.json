@@ -9,11 +9,12 @@
     "preview": "vite preview",
     "electron:dev": "concurrently \"npm run dev\" \"wait-on http://localhost:5173 && electron .\"",
     "electron:build": "npm run build && electron-builder",
-    "lint": "eslint src"
+    "lint": "eslint src --ext js,jsx"
   },
   "dependencies": {
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "react-router": "^7.18.4"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.1",

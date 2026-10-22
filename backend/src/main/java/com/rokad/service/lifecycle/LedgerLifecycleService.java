@@ -50,6 +50,9 @@ public class LedgerLifecycleService {
         || request.openingBalance().compareTo(BigDecimal.ZERO) < 0) {
       throw new IllegalArgumentException("Opening balance must be zero or greater.");
     }
+    if (request.startDate() == null) {
+      throw new IllegalArgumentException("Start date is required.");
+    }
 
     Ledger ledger = new Ledger(request.startDate(), request.openingBalance());
     ledger.setLedgerName(request.ledgerName());

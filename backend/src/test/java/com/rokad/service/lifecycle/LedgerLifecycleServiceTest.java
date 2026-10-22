@@ -73,4 +73,17 @@ class LedgerLifecycleServiceTest {
 
     assertThat(ledgerRepository.count()).isEqualTo(1);
   }
+
+  // FR-001: a setup request without a start date is a clean 400, not a database error
+  @Test
+  void missingStartDateIsRejected() {
+    assertThatThrownBy(
+            () ->
+                lifecycleService.createInitialLedger(
+                    new LedgerSetupRequest(null, null, new BigDecimal("100.00"))))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessage("Start date is required.");
+
+    assertThat(ledgerRepository.count()).isZero();
+  }
 }
