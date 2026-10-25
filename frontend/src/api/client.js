@@ -43,3 +43,19 @@ export async function getActiveLedger() {
 export function setupLedger(setup) {
   return request('/api/ledger/setup', { method: 'POST', body: setup })
 }
+
+export function listTransactions() {
+  return request('/api/transactions')
+}
+
+export function addTransaction(transaction) {
+  return request('/api/transactions', { method: 'POST', body: transaction })
+}
+
+export function editTransaction(id, transaction) {
+  return request(`/api/transactions/${id}`, { method: 'PUT', body: transaction })
+}
+
+export function deleteTransaction(id) {
+  return request(`/api/transactions/${id}`, { method: 'DELETE' })
+}

@@ -12,17 +12,24 @@ function finishExit() {
 
 export function ExitProvider({ children }) {
   const { isDirty, saveAll } = useUnsavedChanges()
-  const [dialogOpen, setDialogOpen] = useState(false)
+  const [prompt, setPrompt] = useState(null) // { intent: 'exit' | 'leave', proceed }
   const [saveError, setSaveError] = useState(null)
 
-  const requestExit = useCallback(() => {
-    if (isDirty) {
-      setSaveError(null)
-      setDialogOpen(true)
-    } else {
-      finishExit()
-    }
-  }, [isDirty])
+  // Runs `proceed` straight away when nothing is unsaved; otherwise asks first.
+  const guard = useCallback(
+    (intent, proceed) => {
+      if (isDirty) {
+        setSaveError(null)
+        setPrompt({ intent, proceed })
+      } else {
+        proceed()
+      }
+    },
+    [isDirty]
+  )
+
+  const requestExit = useCallback(() => guard('exit', finishExit), [guard])
+  const guardNavigation = useCallback((proceed) => guard('leave', proceed), [guard])
 
   // The window's own close button and Alt+F4 arrive from the Electron main process;
   // optional chaining keeps this a no-op in a plain browser tab.
@@ -30,24 +37,40 @@ export function ExitProvider({ children }) {
 
   const handleSave = useCallback(async () => {
     try {
-      if (await saveAll()) finishExit()
-      else setSaveError('Some changes could not be saved, so ROKAD has not closed.')
+      if (await saveAll()) {
+        const { proceed } = prompt
+        setPrompt(null)
+        proceed()
+      } else {
+        setSaveError(
+          prompt.intent === 'exit'
+            ? 'Some changes could not be saved, so ROKAD has not closed.'
+            : 'Some changes could not be saved, so you are still on this screen.'
+        )
+      }
     } catch (error) {
       setSaveError(error.message)
     }
-  }, [saveAll])
+  }, [saveAll, prompt])
 
-  const handleCancel = useCallback(() => setDialogOpen(false), [])
+  const handleDiscard = useCallback(() => {
+    const { proceed } = prompt
+    setPrompt(null)
+    proceed()
+  }, [prompt])
 
-  const value = useMemo(() => ({ requestExit }), [requestExit])
+  const handleCancel = useCallback(() => setPrompt(null), [])
+
+  const value = useMemo(() => ({ requestExit, guardNavigation }), [requestExit, guardNavigation])
   return (
     <ExitContext.Provider value={value}>
       {children}
-      {dialogOpen && (
+      {prompt && (
         <ExitDialog
+          intent={prompt.intent}
           error={saveError}
           onSave={handleSave}
-          onDiscard={finishExit}
+          onDiscard={handleDiscard}
           onCancel={handleCancel}
         />
       )}

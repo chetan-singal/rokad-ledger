@@ -1,8 +1,24 @@
 import { useEffect, useRef } from 'react'
 
-export default function ExitDialog({ error, onSave, onDiscard, onCancel }) {
+const WORDING = {
+  exit: {
+    description:
+      'A form still has changes that have not been saved. Save them, discard them, or cancel and keep working. Your ledger stays active either way; exiting never closes it.',
+    save: 'Save and exit',
+    discard: 'Discard and exit'
+  },
+  leave: {
+    description:
+      'The transaction form has changes that have not been saved. Save them before leaving this screen, discard them, or stay here and keep working.',
+    save: 'Save and leave',
+    discard: 'Discard and leave'
+  }
+}
+
+export default function ExitDialog({ intent = 'exit', error, onSave, onDiscard, onCancel }) {
   const dialogRef = useRef(null)
   const cancelRef = useRef(null)
+  const wording = WORDING[intent]
 
   useEffect(() => {
     const dialog = dialogRef.current
@@ -23,17 +39,14 @@ export default function ExitDialog({ error, onSave, onDiscard, onCancel }) {
       }}
     >
       <h2 id="exit-title">Unsaved changes</h2>
-      <p id="exit-description">
-        A form still has changes that have not been saved. Save them, discard them, or cancel and
-        keep working. Your ledger stays active either way; exiting never closes it.
-      </p>
+      <p id="exit-description">{wording.description}</p>
       {error && <p role="alert">{error}</p>}
       <div className="dialog-actions">
         <button type="button" onClick={onSave}>
-          Save and exit
+          {wording.save}
         </button>
         <button type="button" onClick={onDiscard}>
-          Discard and exit
+          {wording.discard}
         </button>
         <button type="button" ref={cancelRef} onClick={onCancel}>
           Cancel

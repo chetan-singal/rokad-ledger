@@ -1,5 +1,6 @@
-import { matchPath, useLocation } from 'react-router'
-
+import { useCallback } from 'react'
+import { matchPath, useLocation, useNavigate } from 'react-router'
+import { useExit } from './state/ExitContext'
 // SRS 3.1: this exact order. No Transactions or New Ledger entry exists, on purpose.
 // Exit has no path -- it is an action, not a screen.
 export const NAV_ITEMS = [
@@ -54,5 +55,22 @@ export function useCurrentNavItem() {
     NAV_ITEMS.find(
       (item) => item.path && matchPath({ path: item.path, end: item.path === '/' }, pathname)
     ) ?? null
+  )
+}
+
+// Click-handler factory for in-app links: with unsaved form input it asks before leaving.
+// (HashRouter has no useBlocker, so the guard sits on the links themselves.)
+export function useGuardedNavigation() {
+  const { guardNavigation } = useExit()
+  const navigate = useNavigate()
+  const { pathname } = useLocation()
+
+  return useCallback(
+    (to) => (event) => {
+      if (pathname === to) return
+      event.preventDefault()
+      guardNavigation(() => navigate(to))
+    },
+    [guardNavigation, navigate, pathname]
   )
 }
