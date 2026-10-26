@@ -175,3 +175,281 @@ button {
   justify-content: flex-end;
   margin-top: 1rem;
 }
+
+/* ---- Current Ledger (Phase 10) ---- */
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.current-ledger {
+  container: ledger / inline-size;
+}
+
+.summary-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+  gap: 0.75rem;
+  margin: 0 0 1rem;
+}
+
+.summary-strip div {
+  padding: 0.6rem 0.8rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.summary-strip dt {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.summary-strip dd {
+  margin: 0.1rem 0 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.toolbar button,
+.button-link,
+.form-actions button,
+.filter-bar button,
+.banner button {
+  padding: 0.5rem 1rem;
+}
+
+.button-link {
+  display: inline-block;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--text);
+  text-decoration: none;
+}
+
+.status-message {
+  min-height: 1.4rem;
+  margin: 0.25rem 0;
+  color: var(--muted);
+}
+
+.banner {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0.5rem 0;
+  padding: 0.6rem 0.9rem;
+  border: 2px solid var(--error);
+  border-radius: 6px;
+  background: #fdecec;
+}
+
+.txn-form {
+  max-width: 34rem;
+  margin: 0.75rem 0 1rem;
+  padding: 1rem 1.25rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.txn-form h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1.1rem;
+}
+
+.txn-form fieldset {
+  margin: 0 0 1rem;
+  padding: 0;
+  border: 0;
+}
+
+.txn-form legend {
+  padding: 0;
+  font-weight: 600;
+}
+
+.choice {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-right: 1.25rem;
+}
+
+.form-error {
+  color: var(--error);
+}
+
+.form-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: end;
+  margin: 0.75rem 0;
+}
+
+.filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.filter-field label {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.filter-field input,
+.filter-field select {
+  padding: 0.35rem;
+  font: inherit;
+}
+
+.filter-note {
+  padding: 0.5rem 0.75rem;
+  border: 2px solid var(--accent);
+  border-radius: 6px;
+  background: var(--accent-soft);
+}
+
+/* Debit left, Credit right, each scrolling on its own; stacked (Debit first) when narrow. */
+.ledger-sides {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  align-items: start;
+}
+
+@container ledger (max-width: 760px) {
+  .ledger-sides {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ledger-side {
+  min-width: 0;
+}
+
+.ledger-side h2 {
+  margin: 0 0 0.4rem;
+  padding-bottom: 0.3rem;
+  font-size: 1.1rem;
+  border-bottom: 3px solid var(--text);
+}
+
+.table-scroll {
+  max-height: 55vh;
+  overflow: auto;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.table-scroll table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table-scroll th,
+.table-scroll td {
+  padding: 0.45rem 0.6rem;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  vertical-align: top;
+}
+
+.table-scroll thead th {
+  position: sticky;
+  top: 0;
+  background: var(--surface);
+  box-shadow: 0 1px 0 var(--border);
+}
+
+.table-scroll th.amount,
+.table-scroll td.amount {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.reason {
+  overflow-wrap: anywhere;
+}
+
+.row-actions {
+  white-space: nowrap;
+}
+
+.row-actions button {
+  margin-left: 0.25rem;
+  padding: 0.2rem 0.55rem;
+}
+
+.empty-row {
+  color: var(--muted);
+  font-style: italic;
+}
+
+.side-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+}
+
+.pager {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.pager button {
+  padding: 0.25rem 0.7rem;
+}
+
+.side-total {
+  margin: 0;
+}
+
+.confirm-dialog {
+  max-width: 32rem;
+  padding: 1.5rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.confirm-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.4);
+}
+
+button.danger {
+  border-color: var(--error);
+  color: var(--error);
+  font-weight: 700;
+}
