@@ -59,3 +59,7 @@ export function editTransaction(id, transaction) {
 export function deleteTransaction(id) {
   return request(`/api/transactions/${id}`, { method: 'DELETE' })
 }
+
+export function getOverview() {
+  return request('/api/ledger/active/overview')
+}

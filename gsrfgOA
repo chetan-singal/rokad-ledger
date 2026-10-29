@@ -1,3 +1,0 @@
-[33mb112941[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m Phase 10 (Steps D-E): Current Ledger screen, components and styles (TC-009, TC-010, TC-015, TC-018, TC-019, TC-021)
-[33m19f6fbd[m Phase 10 (in progress): Steps B-C - transaction API calls, loader hook, shared Field and ConfirmDialog, unsaved-changes navigation guard
-[33m5ae5cbc[m Phase 10 (Step A): Vitest setup, money helpers and transaction logic with 49 passing tests
