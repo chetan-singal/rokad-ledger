@@ -2,6 +2,7 @@ package com.rokad.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.rokad.dto.LedgerOverviewDTO;
 import com.rokad.dto.LedgerSetupRequest;
 import com.rokad.dto.LedgerSummaryDTO;
 import com.rokad.dto.PeriodRequest;
@@ -53,7 +54,9 @@ class ApiSmokeTest {
     ResponseEntity<LedgerSummaryDTO> beforeSetup =
         rest.getForEntity("/api/ledger/active", LedgerSummaryDTO.class);
     assertThat(beforeSetup.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
-
+    ResponseEntity<LedgerOverviewDTO> overviewBeforeSetup =
+        rest.getForEntity("/api/ledger/active/overview", LedgerOverviewDTO.class);
+    assertThat(overviewBeforeSetup.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
     LedgerSetupRequest setupRequest =
         new LedgerSetupRequest(
             "Smoke Test Ledger", LocalDate.of(2026, 4, 1), new BigDecimal("1000.00"));
@@ -93,7 +96,12 @@ class ApiSmokeTest {
     ResponseEntity<TransactionDTO[]> afterEdit =
         rest.getForEntity("/api/transactions", TransactionDTO[].class);
     assertThat(afterEdit.getBody()[0].amount()).isEqualByComparingTo("600.00");
-
+    ResponseEntity<LedgerOverviewDTO> overview =
+        rest.getForEntity("/api/ledger/active/overview", LedgerOverviewDTO.class);
+    assertThat(overview.getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(overview.getBody().summary().currentBalance()).isEqualByComparingTo("1600.00");
+    assertThat(overview.getBody().recentTransactions()).hasSize(1);
+    assertThat(overview.getBody().todayCredit()).isEqualByComparingTo("0");
     PeriodRequest periodRequest =
         new PeriodRequest(ledgerId, LocalDate.of(2026, 4, 1), LocalDate.of(2026, 4, 30));
     ResponseEntity<VerificationSummary> verified =
