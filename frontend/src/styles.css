@@ -453,3 +453,146 @@ button.danger {
   color: var(--error);
   font-weight: 700;
 }
+
+/* ---- Home and Dashboard (Phase 11) ---- */
+
+.home,
+.dashboard {
+  max-width: 64rem;
+}
+
+.home h2 {
+  margin: 0 0 0.25rem;
+  font-size: 1.4rem;
+}
+
+.home h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1.05rem;
+}
+
+.ledger-line {
+  margin: 0 0 1rem;
+  color: var(--muted);
+}
+
+.balance-card {
+  margin-bottom: 1rem;
+  padding: 1rem 1.25rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.balance-label,
+.balance-sub {
+  margin: 0;
+  color: var(--muted);
+}
+
+.balance-label {
+  font-size: 0.85rem;
+}
+
+.balance-value {
+  margin: 0.15rem 0;
+  font-size: 2rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.activity,
+.empty-state {
+  margin-top: 1rem;
+}
+
+.empty-state {
+  padding: 1.25rem;
+  background: var(--surface);
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+}
+
+.empty-state p {
+  margin: 0 0 0.9rem;
+}
+
+.activity-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.activity-list li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.15rem 0.9rem;
+  align-items: baseline;
+  padding: 0.55rem 0.9rem;
+  border-top: 1px solid var(--border);
+}
+
+.activity-list li:first-child {
+  border-top: 0;
+}
+
+.activity-date {
+  min-width: 6.5rem;
+  color: var(--muted);
+}
+
+.activity-side {
+  min-width: 3.5rem;
+  font-weight: 700;
+}
+
+.activity-reason {
+  flex: 1 1 10rem;
+  overflow-wrap: anywhere;
+}
+
+.activity-amount {
+  margin-left: auto;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.activity-more {
+  margin: 0.5rem 0 0;
+}
+
+.stat-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 1rem;
+  margin: 0 0 1rem;
+}
+
+.stat-card {
+  padding: 1rem 1.1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.stat-card dt {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.stat-card dd {
+  margin: 0.25rem 0 0;
+  font-size: 1.6rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.dashboard-note {
+  margin: 0;
+  color: var(--muted);
+}
