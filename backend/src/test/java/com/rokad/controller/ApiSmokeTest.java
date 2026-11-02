@@ -2,6 +2,8 @@ package com.rokad.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.rokad.dto.CloseRequest;
+import com.rokad.dto.ClosingWindowDTO;
 import com.rokad.dto.LedgerOverviewDTO;
 import com.rokad.dto.LedgerSetupRequest;
 import com.rokad.dto.LedgerSummaryDTO;
@@ -57,6 +59,9 @@ class ApiSmokeTest {
     ResponseEntity<LedgerOverviewDTO> overviewBeforeSetup =
         rest.getForEntity("/api/ledger/active/overview", LedgerOverviewDTO.class);
     assertThat(overviewBeforeSetup.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+    ResponseEntity<ClosingWindowDTO> windowBeforeSetup =
+        rest.getForEntity("/api/ledger/active/closing-window", ClosingWindowDTO.class);
+    assertThat(windowBeforeSetup.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
     LedgerSetupRequest setupRequest =
         new LedgerSetupRequest(
             "Smoke Test Ledger", LocalDate.of(2026, 4, 1), new BigDecimal("1000.00"));
@@ -102,6 +107,11 @@ class ApiSmokeTest {
     assertThat(overview.getBody().summary().currentBalance()).isEqualByComparingTo("1600.00");
     assertThat(overview.getBody().recentTransactions()).hasSize(1);
     assertThat(overview.getBody().todayCredit()).isEqualByComparingTo("0");
+    ResponseEntity<ClosingWindowDTO> window =
+        rest.getForEntity("/api/ledger/active/closing-window", ClosingWindowDTO.class);
+    assertThat(window.getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(window.getBody().earliestEndDate()).isEqualTo(LocalDate.of(2026, 4, 2));
+    assertThat(window.getBody().closable()).isTrue();
     PeriodRequest periodRequest =
         new PeriodRequest(ledgerId, LocalDate.of(2026, 4, 1), LocalDate.of(2026, 4, 30));
     ResponseEntity<VerificationSummary> verified =
@@ -119,8 +129,16 @@ class ApiSmokeTest {
         rest.postForEntity("/api/transactions", toDelete, TransactionDTO.class);
     rest.delete("/api/transactions/" + addedToDelete.getBody().transactionId());
 
+    ResponseEntity<VerificationSummary> verifiedAgain =
+        rest.postForEntity("/api/ledger/verify", periodRequest, VerificationSummary.class);
+    CloseRequest closeRequest =
+        new CloseRequest(
+            ledgerId,
+            periodRequest.periodStart(),
+            periodRequest.periodEnd(),
+            verifiedAgain.getBody());
     ResponseEntity<LedgerSummaryDTO> closed =
-        rest.postForEntity("/api/ledger/close", periodRequest, LedgerSummaryDTO.class);
+        rest.postForEntity("/api/ledger/close", closeRequest, LedgerSummaryDTO.class);
     assertThat(closed.getStatusCode()).isEqualTo(HttpStatus.OK);
     Long nextLedgerId = closed.getBody().ledgerId();
     assertThat(nextLedgerId).isNotEqualTo(ledgerId);

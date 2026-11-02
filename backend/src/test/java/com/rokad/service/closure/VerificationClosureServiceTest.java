@@ -219,9 +219,12 @@ class VerificationClosureServiceTest {
         new BigDecimal("2500.00"),
         "Purchased material");
 
+    VerificationSummary verified =
+        closureService.verifyPeriod(
+            ledger.getLedgerId(), LocalDate.of(2026, 4, 1), LocalDate.of(2026, 9, 30));
     Ledger nextLedger =
         closureService.closeLedger(
-            ledger.getLedgerId(), LocalDate.of(2026, 4, 1), LocalDate.of(2026, 9, 30));
+            ledger.getLedgerId(), LocalDate.of(2026, 4, 1), LocalDate.of(2026, 9, 30), verified);
 
     // TC-032
     Ledger closed = ledgerRepository.findById(ledger.getLedgerId()).orElseThrow();
@@ -259,12 +262,16 @@ class VerificationClosureServiceTest {
     Ledger ledger = activeLedger(LocalDate.of(2026, 4, 1), new BigDecimal("1000.00"));
     Long originalId = ledger.getLedgerId();
 
-    closureService.closeLedger(originalId, LocalDate.of(2026, 4, 1), LocalDate.of(2026, 4, 30));
+    VerificationSummary verified =
+        closureService.verifyPeriod(
+            originalId, LocalDate.of(2026, 4, 1), LocalDate.of(2026, 4, 30));
+    closureService.closeLedger(
+        originalId, LocalDate.of(2026, 4, 1), LocalDate.of(2026, 4, 30), verified);
 
     assertThatThrownBy(
             () ->
                 closureService.closeLedger(
-                    originalId, LocalDate.of(2026, 4, 1), LocalDate.of(2026, 4, 30)))
+                    originalId, LocalDate.of(2026, 4, 1), LocalDate.of(2026, 4, 30), verified))
         .isInstanceOf(LedgerNotActiveException.class);
 
     Ledger stillClosed = ledgerRepository.findById(originalId).orElseThrow();

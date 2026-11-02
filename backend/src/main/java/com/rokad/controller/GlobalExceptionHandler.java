@@ -3,6 +3,7 @@ package com.rokad.controller;
 import com.rokad.dto.ErrorResponse;
 import com.rokad.service.closure.LedgerNotActiveException;
 import com.rokad.service.closure.LedgerVerificationException;
+import com.rokad.service.closure.StaleVerificationException;
 import com.rokad.service.transaction.ClosedLedgerModificationException;
 import com.rokad.service.transaction.TransactionNotFoundException;
 import com.rokad.service.transaction.TransactionValidationException;
@@ -50,6 +51,12 @@ public class GlobalExceptionHandler {
 
   @ExceptionHandler(LedgerNotActiveException.class)
   public ResponseEntity<ErrorResponse> handle(LedgerNotActiveException ex) {
+    return ResponseEntity.status(HttpStatus.CONFLICT)
+        .body(ErrorResponse.of("CONFLICT", ex.getMessage()));
+  }
+
+  @ExceptionHandler(StaleVerificationException.class)
+  public ResponseEntity<ErrorResponse> handle(StaleVerificationException ex) {
     return ResponseEntity.status(HttpStatus.CONFLICT)
         .body(ErrorResponse.of("CONFLICT", ex.getMessage()));
   }

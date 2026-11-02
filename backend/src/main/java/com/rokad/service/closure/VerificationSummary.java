@@ -12,4 +12,5 @@ public record VerificationSummary(
     BigDecimal totalCredit,
     BigDecimal closingBalance,
     long debitCount,
-    long creditCount) {}
+    long creditCount,
+    LocalDate nextLedgerStartDate) {}
