@@ -24,6 +24,16 @@ public class TransactionManagementService {
 
   private static final Duration DUPLICATE_WINDOW = Duration.ofSeconds(2);
 
+  // The audit row keeps "before | after" in a 1000-character column, so a long reason is
+  // shortened in the audit text only; the transaction itself keeps the full reason.
+  private static final int AUDIT_REASON_LIMIT = 200;
+
+  // Rule R7: the balance of the active ledger never goes below zero.
+  private static final String BALANCE_BELOW_ZERO =
+      "The balance cannot go below zero. Check the amount, or record the missing credit first.";
+  private static final String BALANCE_BELOW_ZERO_ON_DELETE =
+      "This transaction cannot be deleted: the balance would go below zero without it.";
+
   private final TransactionRepository transactionRepository;
   private final LedgerLifecycleService lifecycleService;
   private final FinancialCalculationService calculationService;
@@ -58,7 +68,7 @@ public class TransactionManagementService {
             request.reason());
     Transaction saved = transactionRepository.save(transaction);
 
-    recalculateAndPersist(ledger);
+    recalculateAndPersist(ledger, BALANCE_BELOW_ZERO);
     auditService.log(
         AuditAction.TRANSACTION_CREATE,
         "TRANSACTION",
@@ -84,7 +94,7 @@ public class TransactionManagementService {
     transaction.setReason(request.reason());
     Transaction saved = transactionRepository.save(transaction);
 
-    recalculateAndPersist(ledger);
+    recalculateAndPersist(ledger, BALANCE_BELOW_ZERO);
     auditService.log(
         AuditAction.TRANSACTION_UPDATE,
         "TRANSACTION",
@@ -105,7 +115,7 @@ public class TransactionManagementService {
 
     transactionRepository.delete(transaction);
 
-    recalculateAndPersist(ledger);
+    recalculateAndPersist(ledger, BALANCE_BELOW_ZERO_ON_DELETE);
     auditService.log(AuditAction.TRANSACTION_DELETE, "TRANSACTION", transactionId, description);
   }
 
@@ -155,18 +165,34 @@ public class TransactionManagementService {
     }
   }
 
-  private void recalculateAndPersist(Ledger ledger) {
+  // Runs after the change has been written, inside the same database transaction, so throwing
+  // here undoes the change completely.
+  private void recalculateAndPersist(Ledger ledger, String belowZeroMessage) {
     List<Transaction> transactions =
         transactionRepository.findByLedger_LedgerIdOrderByTransactionDateAscTransactionIdAsc(
             ledger.getLedgerId());
     BalanceResult result =
         calculationService.calculateBalance(ledger.getOpeningBalance(), transactions);
+    if (result.closingBalance().signum() < 0) {
+      throw new TransactionValidationException("balance", belowZeroMessage);
+    }
     ledger.setTotalDebit(result.totalDebit());
     ledger.setTotalCredit(result.totalCredit());
   }
 
   private String describeTransaction(Transaction t) {
     return "date=%s, type=%s, amount=%s, reason=%s"
-        .formatted(t.getTransactionDate(), t.getTransactionType(), t.getAmount(), t.getReason());
+        .formatted(
+            t.getTransactionDate(),
+            t.getTransactionType(),
+            t.getAmount(),
+            abbreviate(t.getReason()));
+  }
+
+  private static String abbreviate(String text) {
+    if (text.length() <= AUDIT_REASON_LIMIT) {
+      return text;
+    }
+    return text.substring(0, AUDIT_REASON_LIMIT - 3) + "...";
   }
 }
