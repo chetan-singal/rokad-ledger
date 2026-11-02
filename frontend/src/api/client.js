@@ -63,3 +63,15 @@ export function deleteTransaction(id) {
 export function getOverview() {
   return request('/api/ledger/active/overview')
 }
+
+export function getClosingWindow() {
+  return request('/api/ledger/active/closing-window')
+}
+
+export function verifyPeriod(period) {
+  return request('/api/ledger/verify', { method: 'POST', body: period })
+}
+
+export function closeLedger(closing) {
+  return request('/api/ledger/close', { method: 'POST', body: closing })
+}
