@@ -3,7 +3,8 @@ import { formatCurrency } from '../money'
 import { describeTransaction } from '../transactions/logic'
 
 // One side of the ledger. The Debit and Credit tables are two separate instances of this:
-// they never share rows, and neither knows the other exists (SRS 5.3).
+// they never share rows, and neither knows the other exists (SRS 5.3). With readOnly there is
+// no Actions column; that is how Verify & Close and Saved Ledgers show a ledger (BR-017).
 export default function TransactionTable({
   id,
   title,
@@ -13,7 +14,8 @@ export default function TransactionTable({
   onPageChange,
   onEdit,
   onDelete,
-  headingRef
+  headingRef,
+  readOnly = false
 }) {
   const headingId = `${id}-heading`
 
@@ -32,15 +34,17 @@ export default function TransactionTable({
               <th scope="col" className="amount">
                 Amount
               </th>
-              <th scope="col">
-                <span className="visually-hidden">Actions</span>
-              </th>
+              {!readOnly && (
+                <th scope="col">
+                  <span className="visually-hidden">Actions</span>
+                </th>
+              )}
             </tr>
           </thead>
           <tbody>
             {page.items.length === 0 ? (
               <tr>
-                <td colSpan={4} className="empty-row">
+                <td colSpan={readOnly ? 3 : 4} className="empty-row">
                   {emptyMessage}
                 </td>
               </tr>
@@ -50,22 +54,24 @@ export default function TransactionTable({
                   <td>{formatDate(t.transactionDate)}</td>
                   <td className="reason">{t.reason}</td>
                   <td className="amount">{formatCurrency(t.amount)}</td>
-                  <td className="row-actions">
-                    <button
-                      type="button"
-                      onClick={() => onEdit(t)}
-                      aria-label={`Edit ${describeTransaction(t)}`}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => onDelete(t)}
-                      aria-label={`Delete ${describeTransaction(t)}`}
-                    >
-                      Delete
-                    </button>
-                  </td>
+                  {!readOnly && (
+                    <td className="row-actions">
+                      <button
+                        type="button"
+                        onClick={() => onEdit(t)}
+                        aria-label={`Edit ${describeTransaction(t)}`}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => onDelete(t)}
+                        aria-label={`Delete ${describeTransaction(t)}`}
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  )}
                 </tr>
               ))
             )}
