@@ -21,14 +21,19 @@ import {
   typeLabel
 } from '../transactions/logic'
 import { useTransactions } from '../transactions/useTransactions'
+import { useToday } from '../useToday'
+import { hasNotStarted, notStartedMessage } from '../verify/logic'
 
 export default function CurrentLedger() {
   const { ledger, refresh, error: ledgerError } = useLedger()
   const { status, transactions, error: listError, reload } = useTransactions()
   const { isDirty } = useUnsavedChanges()
+  const today = useToday()
+  const notStarted = hasNotStarted(ledger.startDate, today)
 
   // null, { kind: 'add' }, or { kind: 'edit', transaction }
   const [formMode, setFormMode] = useState(null)
+  const [formVersion, setFormVersion] = useState(0)
   const [filters, setFilters] = useState(NO_FILTERS)
   const [pages, setPages] = useState({ debit: 1, credit: 1 })
   const [confirmation, setConfirmation] = useState(null)
@@ -62,8 +67,12 @@ export default function CurrentLedger() {
 
   // Replacing the form while it holds unsaved input needs an explicit say-so.
   function guardForm(proceed) {
-    if (!isDirty) {
+    const open = () => {
       proceed()
+      setFormVersion((version) => version + 1) // a fresh form, even when the same kind reopens
+    }
+    if (!isDirty) {
+      open()
       return
     }
     setConfirmation({
@@ -71,7 +80,7 @@ export default function CurrentLedger() {
       body: 'The form has unsaved changes that will be lost.',
       confirmLabel: 'Discard changes',
       danger: true,
-      onConfirm: proceed
+      onConfirm: open
     })
   }
 
@@ -143,6 +152,7 @@ export default function CurrentLedger() {
           type="button"
           ref={addButton}
           aria-expanded={formMode?.kind === 'add'}
+          disabled={notStarted}
           onClick={() => guardForm(() => setFormMode({ kind: 'add' }))}
         >
           Add transaction
@@ -152,6 +162,11 @@ export default function CurrentLedger() {
         </GuardedLink>
       </div>
 
+      {notStarted && (
+        <p role="status" className="notice">
+          {notStartedMessage(ledger.startDate)}
+        </p>
+      )}
       <p role="status" className="status-message">
         {message}
       </p>
@@ -166,7 +181,7 @@ export default function CurrentLedger() {
 
       {formMode && (
         <TransactionForm
-          key={formMode.kind === 'edit' ? `edit-${formMode.transaction.transactionId}` : 'add'}
+          key={`${formVersion}-${formMode.kind === 'edit' ? formMode.transaction.transactionId : 'add'}`}
           mode={formMode.kind}
           transaction={formMode.transaction}
           ledgerStartDate={ledger.startDate}

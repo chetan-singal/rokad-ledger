@@ -27,7 +27,7 @@ button {
 
 .app-shell {
   display: grid;
-  grid-template-columns: 230px 1fr;
+  grid-template-columns: 230px minmax(0, 1fr);
   grid-template-rows: auto 1fr;
   grid-template-areas: 'sidebar header' 'sidebar content';
   height: 100vh;
@@ -56,6 +56,7 @@ button {
 .app-header {
   grid-area: header;
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
   justify-content: space-between;
   gap: 1rem;
@@ -317,6 +318,8 @@ button {
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
+ min-width: 0;
+ max-width: 100%;
 }
 
 .filter-field label {
@@ -326,6 +329,7 @@ button {
 
 .filter-field input,
 .filter-field select {
+  max-width: 100%;
   padding: 0.35rem;
   font: inherit;
 }
@@ -567,7 +571,7 @@ button.danger {
 
 .stat-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(13rem, 100%), 1fr));
   gap: 1rem;
   margin: 0 0 1rem;
 }
@@ -595,4 +599,132 @@ button.danger {
 .dashboard-note {
   margin: 0;
   color: var(--muted);
+}
+
+/* ---- Verify & Close Ledger (Phase 12) ---- */
+
+.verify-close {
+  container: ledger / inline-size;
+  max-width: 64rem;
+}
+
+.verify-close h2 {
+  margin: 1.25rem 0 0.5rem;
+  font-size: 1.15rem;
+}
+
+.verify-intro {
+  margin: 0 0 0.75rem;
+  color: var(--muted);
+}
+
+.notice {
+  margin: 0.5rem 0;
+  padding: 0.6rem 0.9rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--accent);
+  border-radius: 6px;
+}
+
+.period-form {
+  margin: 0.75rem 0 0.5rem;
+  padding: 1rem 1.1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.period-form h2 {
+  margin-top: 0;
+}
+
+.period-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem 2rem;
+  align-items: flex-start;
+}
+
+.period-row .field {
+  flex: 1 1 14rem;
+  min-width: 0;
+}
+
+.period-fixed {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.period-label,
+.period-note {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.next-ledger-note {
+  margin: 0.75rem 0;
+}
+
+.verify-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  margin: 1rem 0;
+}
+
+.verify-actions button,
+.period-form button {
+  padding: 0.5rem 1rem;
+}
+
+/* Closing is final, so it never looks like a routine Save (SRS 18.3). */
+button.close-action {
+  border: 1px solid var(--text);
+  border-radius: 4px;
+  background: var(--text);
+  color: #fff;
+  font-weight: 700;
+}
+
+button.close-action:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.confirm-figures {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0 0 1rem;
+}
+
+.confirm-figures div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.confirm-figures dt {
+  color: var(--muted);
+}
+
+.confirm-figures dd {
+  margin: 0;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.closed-panel {
+  margin-top: 1rem;
+  padding: 1.25rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.activity-more a {
+  color: var(--accent);
 }
