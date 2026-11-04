@@ -1,6 +1,6 @@
 # CLAUDE.md — ROKAD Daily Ledger
 
-Claude: read this file first in every ROKAD chat. It holds the working agreement, the project facts, the rules that must not be broken, the current status and the open decisions. Last updated: 2026-10-30 (Phases 1–11 done, Phase 12 next).
+Claude: read this file first in every ROKAD chat. It holds the working agreement, the project facts, the rules that must not be broken, the current status and the open decisions. Last updated: 2026-11-04 (Phases 1–12 done, Phase 13 next).
 
 ---
 
@@ -22,7 +22,7 @@ Claude: read this file first in every ROKAD chat. It holds the working agreement
 
 ROKAD is a simple, **offline, single-user desktop ledger**. One active ledger at a time. Entries are Debit or Credit with a date, an amount and a reason. The user verifies and closes a ledger; closing saves it as a read-only record and automatically opens the next ledger, carrying the closing balance forward as its opening balance. No login, no cloud, no multi-user.
 
-Documents (in project docs): `SRS.docx` (requirements, numbered FR/BR/NFR/TC), `roadmap.docx` (14 phases), per-phase progress reports and per-phase Execution Plan documents (Phase 9, 10, 11 exist).
+Documents (in project docs): `SRS.docx` (requirements, numbered FR/BR/NFR/TC), `roadmap.docx` (14 phases), per-phase progress reports and per-phase Execution Plan documents (Phase 9, 10, 11 and 12 exist).
 
 ---
 
@@ -30,7 +30,7 @@ Documents (in project docs): `SRS.docx` (requirements, numbered FR/BR/NFR/TC), `
 
 | Item | Value |
 | --- | --- |
-| Local folder | `C:\Users\Chetan\Desktop\rokad-ledger` (`backend`, `frontend`) |
+| Local folder | `C:\Users\Chetan\Desktop\rokad-ledger` (`backend`, `frontend`, `docs`) |
 | Repo | `https://github.com/chetan-singal/rokad-ledger`, branch `main` |
 | Backend | Spring Boot 3.3, Java 17+, Maven 3.10, port 8080 |
 | Frontend | Electron 31, React 18.3.1, Vite 5.4, react-router 7 (HashRouter), Vitest 2.1.9, port 5173 |
@@ -62,15 +62,16 @@ npm run lint
 npm run build
 ```
 
-Current expected results: backend **41 tests**, frontend **59 tests**, lint clean, build clean (CSS 7.27 kB, JS about 212 kB).
+Current expected results: backend **60 tests**, frontend **79 tests**, lint clean, build clean (CSS 8.85 kB, JS about 221 kB).
 
-**Commit format:** `git add <paths>`, `git commit -m "Phase N (Step X): ..."`, `git push origin main`, then `git --no-pager log --oneline -3`. Last commit: `b5919cd` (Phase 11 Step E).
+**Commit format:** `git add <paths>`, `git commit -m "Phase N (Step X): ..."`, `git push origin main`, then `git --no-pager log --oneline -3`. Last code commit: `a29b81a` (Phase 12 Step E). The Phase 12 Step F commit (checklist passed, this file updated) follows it.
 
 **Gotchas**
-- Run Maven only in a terminal where `mvn -v` shows Java 17 or newer. One terminal showed Java 1.8 and Maven failed with a plugin error there.
+- Run Maven only in a terminal where `mvn -v` shows Java 17 or newer. A terminal that showed Java 1.8 made Maven fail with a plugin error twice; on 2026-11-04 `mvn spotless:apply` failed with `UnsupportedClassVersionError ... class file version 61.0`, which means the same thing. Open a new terminal and run it again.
 - If MySQL 8 refuses the connection with a public-key or caching_sha2_password error, add `?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC` to the datasource URL.
 - The Console error "A listener indicated an asynchronous response by returning true…" comes from a browser extension, not ROKAD. An Incognito window shows none.
 - Seed data used for testing is deleted afterwards (`reason LIKE 'Seed entry %'`).
+- The development database holds the Phase 12 checklist closures and entries. Checklist rows 15, 16 and 18 used a development-only SQL statement (`UPDATE ledger SET start_date = CURDATE() WHERE status = 'ACTIVE'`) that moved some ledgers' start dates back by one day, so those ledgers start on the day the previous one ended. Restore `rokad_db_before_phase12.sql` (on the Desktop) when a clean ledger chain is needed, for example for the Phase 13 chain check.
 
 ---
 
@@ -81,10 +82,14 @@ Current expected results: backend **41 tests**, frontend **59 tests**, lint clea
 Packages: `config` (ClockConfig, CorsConfig), `controller`, `dto`, `entity`, `repository`, `service/{audit,calculation,closure,lifecycle,overview,transaction}`.
 
 - **FinancialCalculationService** is the single place that does money arithmetic: `Balance = Opening + Credit − Debit`, running balances, totals. Every other service calls it.
-- **Tables:** `ledger`, `ledger_transaction`, `ledger_audit`. Money is `DECIMAL(15,2)`. The database allows only one `ACTIVE` ledger (`uq_ledger_one_active`).
-- **Closing** (`VerificationClosureService.closeLedger`) runs in one database transaction: recalculate from latest data, mark the ledger CLOSED, create the next ACTIVE ledger (opening = closing, start = end + 1 day). `verifyPeriod` writes one audit row per call.
+- **Tables:** `ledger`, `ledger_transaction`, `ledger_audit`. Money is `DECIMAL(15,2)`. The database allows only one `ACTIVE` ledger (`uq_ledger_one_active`) and `opening_balance >= 0` (`chk_ledger_opening_balance_nonneg`).
+- **Closing** (`VerificationClosureService.closeLedger(ledgerId, periodStart, periodEnd, verified)`) runs in one database transaction: recalculate from latest data, check the closing rules, mark the ledger CLOSED, create the next ACTIVE ledger (opening = closing, start = end + 1 day). `verifyPeriod` stays flexible (any valid sub-range for review), writes one audit row per call and now returns `nextLedgerStartDate`.
+- **Closing rules (Phase 12):** the period must start on the ledger's own start date; the end date must not be before the latest entry and not after today; the end date may be today, in which case the next ledger starts tomorrow; `verified` (the summary the user confirmed) must match the figures recomputed from the latest data, otherwise `StaleVerificationException` (409 `CONFLICT`); the closing balance must not be negative. `closeLedger` without `verified` is refused.
+- **Balance rule (Phase 12):** an add, edit or delete that would take the ledger's balance below zero is refused with 400 `VALIDATION_ERROR`, `field: "balance"`, and nothing is saved. It is checked on the final balance, not day by day.
+- **A ledger can start tomorrow.** After closing on today, no entry can be added until the new ledger's start date. Current Ledger shows a notice and disables Add; Verify & Close says "Nothing to close yet".
 - **Future-dated entries are rejected.** Entry dates must be on or after the ledger start date and not after today.
 - Duplicate-save guard: an identical entry created within the last 2 seconds is rejected (`field: "duplicate"`).
+- Audit details abbreviate the reason (200 characters) so they fit the 1000-character column.
 
 ### API
 
@@ -94,10 +99,11 @@ Packages: `config` (ClockConfig, CorsConfig), `controller`, `dto`, `entity`, `re
 | `POST /api/ledger/setup` | create the first ledger (name optional, start date, opening balance ≥ 0) |
 | `GET /api/ledger/active` | `LedgerSummaryDTO` of the active ledger |
 | `GET /api/ledger/active/overview` | `LedgerOverviewDTO` for Home and Dashboard |
+| `GET /api/ledger/active/closing-window` | the end dates the active ledger can be closed on (`ClosingWindowDTO`) |
 | `GET /api/transactions` | active ledger entries, oldest first; optional `startDate`, `endDate` (ISO dates, verified working) |
 | `POST /api/transactions`, `PUT /api/transactions/{id}`, `DELETE /api/transactions/{id}` | add, edit, delete |
 | `POST /api/ledger/verify` | body `{ledgerId, periodStart, periodEnd}` → `VerificationSummary` |
-| `POST /api/ledger/close` | same body → summary of the new active ledger |
+| `POST /api/ledger/close` | body `CloseRequest {ledgerId, periodStart, periodEnd, verified}` → summary of the new active ledger |
 | `GET /api/ledgers` | closed ledgers, most recently closed first |
 | `GET /api/ledgers/{id}` | `SavedLedgerDetailDTO {summary, transactions}` |
 
@@ -105,19 +111,22 @@ Shapes:
 - `LedgerSummaryDTO {ledgerId, ledgerName, startDate, status, openingBalance, currentBalance, totalDebit, totalCredit, transactionCount}` (no `endDate` or `closedAt` yet)
 - `LedgerOverviewDTO {summary, today, todayDebit, todayCredit, recentTransactions}` (5 newest entries, date descending then id descending)
 - `TransactionDTO {transactionId, ledgerId, transactionDate, transactionType, amount, reason, createdAt, updatedAt}` (`createdAt` and `updatedAt` can be null on add and edit responses)
-- `VerificationSummary {ledgerId, periodStart, periodEnd, openingBalance, totalDebit, totalCredit, closingBalance, debitCount, creditCount}`
-- Errors: `{error, field, message}` with `VALIDATION_ERROR` (400), `NOT_FOUND` (404), `CONFLICT` (409), `INTERNAL_ERROR` (500, generic message). CORS allows `http://localhost:5173`, methods GET/POST/PUT/DELETE, header `Content-Type` only.
+- `VerificationSummary {ledgerId, periodStart, periodEnd, openingBalance, totalDebit, totalCredit, closingBalance, debitCount, creditCount, nextLedgerStartDate}`
+- `ClosingWindowDTO {ledgerId, startDate, lastEntryDate, earliestEndDate, latestEndDate, closable}` (`lastEntryDate` is null while the ledger has no entries; `earliestEndDate` is the latest entry's date, or the start date when empty; `latestEndDate` is today; `closable` is false only when the ledger starts after today)
+- `CloseRequest {ledgerId, periodStart, periodEnd, verified}` (`verified` is the `VerificationSummary` the user confirmed)
+- Errors: `{error, field, message}` with `VALIDATION_ERROR` (400), `NOT_FOUND` (404), `CONFLICT` (409, also for a stale verification), `INTERNAL_ERROR` (500, generic message). CORS allows `http://localhost:5173`, methods GET/POST/PUT/DELETE, header `Content-Type` only.
 
 ### Frontend (`frontend/src`)
 
-- `api/client.js` — `request()`, `ApiError`, `getActiveLedger`, `setupLedger`, `listTransactions`, `addTransaction`, `editTransaction`, `deleteTransaction`, `getOverview`. (Verify, close and saved-ledger calls do not exist yet.)
+- `api/client.js` — `request()`, `ApiError`, `getActiveLedger`, `setupLedger`, `listTransactions`, `addTransaction`, `editTransaction`, `deleteTransaction`, `getOverview`, `getClosingWindow`, `verifyPeriod`, `closeLedger` (10 of the 12 endpoints; the two saved-ledger calls do not exist yet).
 - `money.js` — all money handling in **integer paise using BigInt**: `toPaise`, `sumPaise`, `formatPaise`, `formatCurrency` (₹, Indian digit grouping). The browser never adds or subtracts money as floats.
-- `format.js` — `formatDate` ("22 Oct 2026"), `todayIso`.
+- `format.js` — `formatDate` ("22 Oct 2026"), `todayIso`. `useToday.js` — today's local date as an ISO string; it updates when the window regains focus.
 - `transactions/logic.js` + `useTransactions.js` — validation (amount pattern `^\d{1,13}(\.\d{1,2})?$`, reason ≤ 500 chars), filters, paging (50 per side), `formatTotal`, `describeTransaction`.
 - `overview/logic.js` + `useOverview.js` — Home and Dashboard figures; the hook reloads when the window regains focus.
-- `state/` — `LedgerContext` (`useLedger`: ledger, refresh, status, error), `UnsavedChangesContext` (`setDirty(key, dirty, save)`, `saveAll`), `ExitContext` (exit flow and `guardNavigation`).
-- `components/` — `AppShell`, `NavMenu`, `GuardedLink`, `LedgerGate`, `LedgerStatusIndicator`, `LedgerSummaryStrip`, `TransactionForm`, `TransactionTable`, `FilterBar`, `Field`, `ConfirmDialog`, `ExitDialog`, `OverviewFrame`, `PlaceholderScreen`.
-- `screens/` — `Home`, `Dashboard`, `CurrentLedger`, `SetupScreen` are real; `VerifyCloseLedger`, `SavedLedgers`, `Settings` are placeholders.
+- `verify/logic.js` + `verify/useClosingWindow.js` — end-date checks, period request, wording for the next-ledger and not-started sentences, close-error messages; the hook loads the closing window and reloads on focus.
+- `state/` — `LedgerContext` (`useLedger`: ledger, refresh, status, error; it loads at start and after actions, not on window focus), `UnsavedChangesContext` (`setDirty(key, dirty, save)`, `isDirty`, `saveAll`), `ExitContext` (exit flow and `guardNavigation`).
+- `components/` — `AppShell`, `NavMenu`, `GuardedLink`, `LedgerGate`, `LedgerStatusIndicator`, `LedgerSummaryStrip`, `TransactionForm`, `TransactionTable` (takes `readOnly`), `LedgerSides` (the two independent side-by-side lists for a period, read only; reuse it for Saved Ledgers), `FilterBar`, `Field`, `ConfirmDialog`, `ExitDialog`, `OverviewFrame`, `PlaceholderScreen`.
+- `screens/` — `Home`, `Dashboard`, `CurrentLedger`, `SetupScreen` and `VerifyCloseLedger` are real; `SavedLedgers` and `Settings` are placeholders.
 - Navigation order (fixed): Home, Dashboard, Current Ledger, Verify & Close Ledger, Saved Ledgers, Settings, Exit. No Transactions or New Ledger item.
 - In-app links that leave a screen with unsaved input must use `GuardedLink` or `useGuardedNavigation`.
 
@@ -133,48 +142,44 @@ Shapes:
 6. Filters never change stored balances. A filtered view must say it is filtered.
 7. Delete needs confirmation. Edit needs confirmation when the amount, type or date changes.
 8. Everything works fully offline on one machine.
+9. A ledger is closed as a whole: the start date is the ledger's own, only the end date is chosen, not before the latest entry and not after today.
+10. Closing needs the confirmed figures to match: the server recomputes them and refuses if the ledger changed after verification.
+11. The balance never goes below zero: an add, edit or delete that would do so is refused and nothing is saved.
 
 ---
 
-## 6. Status (2026-10-30)
+## 6. Status (2026-11-04)
 
 | Phase | Name | Status |
 | --- | --- | --- |
 | 1–8 | Setup, database, domain, calculation, lifecycle, transactions, closure service, API | Done |
 | 9 | UI Shell & Navigation | Done |
 | 10 | Current Ledger Screen | Done |
-| 11 | Home & Dashboard (overview endpoint, hook, logic, screens, styles; 20-row manual checklist passed) | Done |
-| 12 | Verify & Close Ledger Screen | **Next**, design first |
-| 13 | Saved Ledgers & Settings (backup and restore) | Not started |
+| 11 | Home & Dashboard | Done |
+| 12 | Verify & Close Ledger Screen (closing rules, closing window, confirmed figures, balance rule, the screen, layout fixes; 30-row manual checklist passed) | Done |
+| 13 | Saved Ledgers & Settings (backup and restore) | **Next** |
 | 14 | Testing, hardening, packaging, user docs | Not started |
 
-Test counts: backend 41 (calculation 5, lifecycle 5, transactions 9, closure 8, repositories 5, overview 6, API smoke 1, CORS 2); frontend 59 (money 10, transaction logic 39, overview logic 10).
+Test counts: backend 60 (calculation 5, lifecycle 5, transactions 9, balance guard 5, closure 8, closure rules 13, closure atomicity 1, repositories 5, overview 6, API smoke 1, CORS 2); frontend 79 (money 10, transaction logic 39, overview logic 10, verify logic 20).
 
 ---
 
-## 7. Phase 12 starting notes, decisions and open items
+## 7. Open items
 
-**Decision (2026-10-30):** design the Verify & Close Ledger page first, then change the backend closing rules to match the design. Do not change `closeLedger` before the design is agreed.
+**Phase 13**
+- `LedgerSummaryDTO` needs `endDate` and `closedAt` (SRS 10.1). The Saved Ledgers list must show entry counts without loading every closed ledger's entries.
+- Backup and restore design (local folder, manual export), first-launch restore after a reinstall, and a chain check after restore: each opening equals the previous closing, dates are contiguous, exactly one ledger is active.
+- Reuse `LedgerSides` for the saved ledger detail.
 
-**Phase 12 requirements to cover** (SRS Section 8 and 9, roadmap Phase 12, TC-016, TC-027–TC-031):
-- Period selection (start and end date); end ≥ start; end not in the future; period inclusive of both ends.
-- Show ledger name, selected period, applicable opening balance, total debit, total credit, calculated closing balance, debit and credit counts, and the two-sided transaction display for the period.
-- "Verify & Close Ledger" primary action and a clearly different "return without closing" action.
-- Confirmation dialog listing period, opening balance, total credit, total debit, closing balance, that the ledger becomes read-only, and that a new ledger starts automatically.
-- Closure blocked while a form is unsaved, when the period is invalid, or when anything fails; failures show a clear message and leave the active ledger untouched.
-- Call `/api/ledger/verify` from a button, not on every date change (each call writes an audit row).
+**Phase 14**
+- Packaging is the largest schedule risk: Electron, the Java backend and MySQL must start in order, on a free port, and stop together; how MySQL reaches the user's machine; single-instance lock; CORS origin of the packaged app; `electron-builder` configuration. Start a spike before Phase 13.
+- The backend listens on all network interfaces and has no API secret: bind to 127.0.0.1 and require a per-launch secret from Electron.
+- Malformed requests (bad JSON, date or enum) answer 500 through the catch-all handler. The server does not check amount decimals, reason length or ledger-name length. The setup screen has no limit on the ledger name either, so a name over 255 characters would fail at the database as a 500.
+- The closing check compares only totals, closing balance and the two counts. It does not compare the period dates, opening balance or next start date; the screen always sends the verified summary's own dates, so only a direct API call could differ.
+- `spring.jpa.show-sql=true`, the README still describes the Phase 1 skeleton, the 10,000-entry performance check (NFR-002), automated browser tests of the layout rules, CI, a seed-data generator, a logging plan.
 
-**Open item A — closing rule (proposed, not applied).** Today `closeLedger` accepts any valid period. Entries outside the period stay attached to the closed ledger but are left out of its stored totals and out of the balance carried forward, so money would vanish and Saved Ledgers would show rows that do not add up. Example with the current dev data: closing 27 Oct to 29 Oct would carry forward ₹70.00 instead of ₹9,470.00. Proposed rule in `closeLedger`: the period must start on the ledger's own start date and end on or after the date of the last entry; `verifyPeriod` stays flexible for reviewing sub-ranges. The page then locks the start date and sets the end date minimum (the newest entry date is `recentTransactions[0].transactionDate` in the overview). A ready-made version of `VerificationClosureService.java` with this rule was prepared and deliberately not applied.
-
-**Open item B — ledger that starts tomorrow.** Closing with end date = today starts the next ledger tomorrow. Until then no entry can be added (the date picker's minimum is later than its maximum) and Current Ledger does not explain why. Decide the wording or behaviour in the Phase 12 design.
-
-**Small Current Ledger items (not blocking):**
-- Clicking "Add transaction" again while the Add form holds typed text asks to discard, but "Discard changes" leaves the typed values in place.
-- At the default 1100 px window each side is about 400 px wide and the Reason column can break mid-word; at 1280 px it reads fine.
-
-**Later phases:**
-- Phase 13: `LedgerSummaryDTO` needs `endDate` and `closedAt` for Saved Ledgers; backup and restore design (local folder, manual export) is undecided.
-- Phase 14: malformed requests (bad JSON, date or enum) return 500 through the catch-all handler; the server does not validate amount decimals or reason length (the UI does); the README still describes the Phase 1 skeleton; packaging needs a CORS origin for the packaged app, a way to start the backend, and `electron-builder` configuration.
+**Documents (no code)**
+- SRS and roadmap wording: numbering of the two joined documents, traceability rows for Home, Dashboard and filters, "Phase 0" for the planning stage, contradictions (§4.3 "right table", future dates "default", currency in setup). Section 10 of the Phase 12 plan lists the Phase 12 amendments.
 
 **Settled, do not raise again:** `GET /api/transactions?startDate=…&endDate=…` accepts ISO dates (checked with `curl.exe`); no fix is needed.
 
@@ -182,7 +187,7 @@ Test counts: backend 41 (calculation 5, lifecycle 5, transactions 9, closure 8, 
 
 ## 8. Phase workflow convention
 
-Each phase has an Execution Plan document with lettered steps (A, B, C…), a gate after each step (tests, lint, build), commit points, and a numbered manual checklist run in the real app. Chetan works through the steps with Claude one at a time. A step is done when its gate output is pasted and checked. Keep the same pattern for Phase 12 and later.
+Each phase has an Execution Plan document with lettered steps (A, B, C…), a gate after each step (tests, lint, build), commit points, and a numbered manual checklist run in the real app. Chetan works through the steps with Claude one at a time. A step is done when its gate output is pasted and checked. Keep the same pattern for Phase 13 and later.
 
 ---
 
