@@ -65,16 +65,7 @@ public class LedgerLifecycleService {
             ledger.getLedgerId());
 
     if (ledger.getStatus() == LedgerStatus.CLOSED) {
-      return new LedgerSummaryDTO(
-          ledger.getLedgerId(),
-          ledger.getLedgerName(),
-          ledger.getStartDate(),
-          ledger.getStatus(),
-          ledger.getOpeningBalance(),
-          ledger.getClosingBalance(),
-          ledger.getTotalDebit(),
-          ledger.getTotalCredit(),
-          transactions.size());
+      return LedgerSummaryDTO.closed(ledger, transactions.size());
     }
 
     BalanceResult result =
@@ -83,11 +74,14 @@ public class LedgerLifecycleService {
         ledger.getLedgerId(),
         ledger.getLedgerName(),
         ledger.getStartDate(),
+        null,
         ledger.getStatus(),
         ledger.getOpeningBalance(),
         result.closingBalance(),
         result.totalDebit(),
         result.totalCredit(),
-        transactions.size());
+        null,
+        transactions.size(),
+        null);
   }
 }

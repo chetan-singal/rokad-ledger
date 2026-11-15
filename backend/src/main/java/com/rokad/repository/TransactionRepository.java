@@ -44,4 +44,9 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
 
   @Query("SELECT MAX(t.transactionDate) FROM Transaction t WHERE t.ledger.ledgerId = :ledgerId")
   Optional<LocalDate> findLatestTransactionDate(@Param("ledgerId") Long ledgerId);
+
+  // One row per ledger that has entries: [ledgerId, number of entries]. Saved Ledgers uses it
+  // to show every entry count without loading a single entry.
+  @Query("SELECT t.ledger.ledgerId, COUNT(t) FROM Transaction t GROUP BY t.ledger.ledgerId")
+  List<Object[]> countEntriesPerLedger();
 }

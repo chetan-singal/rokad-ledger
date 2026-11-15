@@ -4,6 +4,7 @@ import com.rokad.dto.ErrorResponse;
 import com.rokad.service.closure.LedgerNotActiveException;
 import com.rokad.service.closure.LedgerVerificationException;
 import com.rokad.service.closure.StaleVerificationException;
+import com.rokad.service.saved.SavedLedgerNotFoundException;
 import com.rokad.service.transaction.ClosedLedgerModificationException;
 import com.rokad.service.transaction.TransactionNotFoundException;
 import com.rokad.service.transaction.TransactionValidationException;
@@ -37,8 +38,8 @@ public class GlobalExceptionHandler {
         .body(ErrorResponse.of("NOT_FOUND", ex.getMessage()));
   }
 
-  @ExceptionHandler(LedgerNotFoundException.class)
-  public ResponseEntity<ErrorResponse> handle(LedgerNotFoundException ex) {
+  @ExceptionHandler(SavedLedgerNotFoundException.class)
+  public ResponseEntity<ErrorResponse> handle(SavedLedgerNotFoundException ex) {
     return ResponseEntity.status(HttpStatus.NOT_FOUND)
         .body(ErrorResponse.of("NOT_FOUND", ex.getMessage()));
   }

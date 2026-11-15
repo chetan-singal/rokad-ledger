@@ -3,12 +3,9 @@ package com.rokad.controller;
 import com.rokad.dto.LedgerSetupRequest;
 import com.rokad.dto.LedgerSummaryDTO;
 import com.rokad.dto.SavedLedgerDetailDTO;
-import com.rokad.dto.TransactionDTO;
 import com.rokad.entity.Ledger;
-import com.rokad.entity.LedgerStatus;
-import com.rokad.repository.LedgerRepository;
-import com.rokad.repository.TransactionRepository;
 import com.rokad.service.lifecycle.LedgerLifecycleService;
+import com.rokad.service.saved.SavedLedgerService;
 import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,16 +21,12 @@ import org.springframework.web.bind.annotation.RestController;
 public class LedgerController {
 
   private final LedgerLifecycleService lifecycleService;
-  private final LedgerRepository ledgerRepository;
-  private final TransactionRepository transactionRepository;
+  private final SavedLedgerService savedLedgerService;
 
   public LedgerController(
-      LedgerLifecycleService lifecycleService,
-      LedgerRepository ledgerRepository,
-      TransactionRepository transactionRepository) {
+      LedgerLifecycleService lifecycleService, SavedLedgerService savedLedgerService) {
     this.lifecycleService = lifecycleService;
-    this.ledgerRepository = ledgerRepository;
-    this.transactionRepository = transactionRepository;
+    this.savedLedgerService = savedLedgerService;
   }
 
   @PostMapping("/ledger/setup")
@@ -54,23 +47,11 @@ public class LedgerController {
 
   @GetMapping("/ledgers")
   public List<LedgerSummaryDTO> listSaved() {
-    return ledgerRepository.findAllByStatusOrderByClosedAtDesc(LedgerStatus.CLOSED).stream()
-        .map(lifecycleService::getLedgerSummary)
-        .toList();
+    return savedLedgerService.listSaved();
   }
 
   @GetMapping("/ledgers/{id}")
   public SavedLedgerDetailDTO getSavedDetail(@PathVariable Long id) {
-    Ledger ledger =
-        ledgerRepository.findById(id).orElseThrow(() -> new LedgerNotFoundException(id));
-
-    LedgerSummaryDTO summary = lifecycleService.getLedgerSummary(ledger);
-    List<TransactionDTO> transactions =
-        transactionRepository
-            .findByLedger_LedgerIdOrderByTransactionDateAscTransactionIdAsc(id)
-            .stream()
-            .map(TransactionDTO::from)
-            .toList();
-    return new SavedLedgerDetailDTO(summary, transactions);
+    return savedLedgerService.getDetail(id);
   }
 }

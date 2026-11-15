@@ -149,10 +149,19 @@ class ApiSmokeTest {
     assertThat(saved.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(saved.getBody()).hasSize(1);
     assertThat(saved.getBody()[0].ledgerId()).isEqualTo(ledgerId);
+    assertThat(saved.getBody()[0].endDate()).isNotNull();
+    assertThat(saved.getBody()[0].closedAt()).isNotNull();
+    assertThat(saved.getBody()[0].closingBalance()).isNotNull();
+    assertThat(saved.getBody()[0].transactionCount()).isEqualTo(1);
 
     ResponseEntity<SavedLedgerDetailDTO> detail =
         rest.getForEntity("/api/ledgers/" + ledgerId, SavedLedgerDetailDTO.class);
     assertThat(detail.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(detail.getBody().transactions()).hasSize(1);
+
+    // the new active ledger is not an archive entry
+    ResponseEntity<String> activeAsSaved =
+        rest.getForEntity("/api/ledgers/" + closed.getBody().ledgerId(), String.class);
+    assertThat(activeAsSaved.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
   }
 }

@@ -177,6 +177,7 @@ Test counts: backend 60 (calculation 5, lifecycle 5, transactions 9, balance gua
 - Malformed requests (bad JSON, date or enum) answer 500 through the catch-all handler. The server does not check amount decimals, reason length or ledger-name length. The setup screen has no limit on the ledger name either, so a name over 255 characters would fail at the database as a 500.
 - The closing check compares only totals, closing balance and the two counts. It does not compare the period dates, opening balance or next start date; the screen always sends the verified summary's own dates, so only a direct API call could differ.
 - `spring.jpa.show-sql=true`, the README still describes the Phase 1 skeleton, the 10,000-entry performance check (NFR-002), automated browser tests of the layout rules, CI, a seed-data generator, a logging plan.
+- Cosmetic: at the default 1100 px window each side of Current Ledger is about 400 px wide and a long reason can break in the middle of a word (it reads fine at 1280 px); a small CSS adjustment, for example a minimum width for the Reason column.
 
 **Documents (no code)**
 - SRS and roadmap wording: numbering of the two joined documents, traceability rows for Home, Dashboard and filters, "Phase 0" for the planning stage, contradictions (§4.3 "right table", future dates "default", currency in setup). Section 10 of the Phase 12 plan lists the Phase 12 amendments.
