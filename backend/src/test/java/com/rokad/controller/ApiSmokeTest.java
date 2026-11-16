@@ -2,6 +2,8 @@ package com.rokad.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.rokad.dto.AppInfoDTO;
+import com.rokad.dto.BackupSummaryDTO;
 import com.rokad.dto.CloseRequest;
 import com.rokad.dto.ClosingWindowDTO;
 import com.rokad.dto.LedgerOverviewDTO;
@@ -15,6 +17,7 @@ import com.rokad.entity.Ledger;
 import com.rokad.entity.TransactionType;
 import com.rokad.repository.LedgerRepository;
 import com.rokad.repository.TransactionRepository;
+import com.rokad.service.backup.BackupFile;
 import com.rokad.service.closure.VerificationSummary;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -25,7 +28,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 
@@ -163,5 +169,36 @@ class ApiSmokeTest {
     ResponseEntity<String> activeAsSaved =
         rest.getForEntity("/api/ledgers/" + closed.getBody().ledgerId(), String.class);
     assertThat(activeAsSaved.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+
+    // backup over HTTP, with the real JSON writer and reader
+    ResponseEntity<BackupFile> exported = rest.getForEntity("/api/backup/export", BackupFile.class);
+    assertThat(exported.getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(exported.getBody().counts().ledgers()).isEqualTo(2);
+
+    ResponseEntity<BackupSummaryDTO> inspected =
+        rest.postForEntity("/api/backup/inspect", exported.getBody(), BackupSummaryDTO.class);
+    assertThat(inspected.getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(inspected.getBody().closedLedgerCount()).isEqualTo(1);
+
+    ResponseEntity<BackupSummaryDTO> restored =
+        rest.postForEntity("/api/backup/restore", exported.getBody(), BackupSummaryDTO.class);
+    assertThat(restored.getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(restored.getBody().ledgerCount()).isEqualTo(2);
+
+    HttpHeaders json = new HttpHeaders();
+    json.setContentType(MediaType.APPLICATION_JSON);
+    ResponseEntity<String> notABackup =
+        rest.postForEntity("/api/backup/restore", new HttpEntity<>("{}", json), String.class);
+    assertThat(notABackup.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    assertThat(notABackup.getBody()).contains("not a valid ROKAD backup");
+    ResponseEntity<String> cutShort =
+        rest.postForEntity(
+            "/api/backup/inspect", new HttpEntity<>("{\"format\": \"rokad-ba", json), String.class);
+    assertThat(cutShort.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    assertThat(cutShort.getBody()).contains("not a valid ROKAD backup");
+
+    ResponseEntity<AppInfoDTO> info = rest.getForEntity("/api/app/info", AppInfoDTO.class);
+    assertThat(info.getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(info.getBody().ledgerCount()).isEqualTo(2);
   }
 }

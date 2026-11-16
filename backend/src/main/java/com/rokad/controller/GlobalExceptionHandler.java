@@ -1,6 +1,7 @@
 package com.rokad.controller;
 
 import com.rokad.dto.ErrorResponse;
+import com.rokad.service.backup.BackupInvalidException;
 import com.rokad.service.closure.LedgerNotActiveException;
 import com.rokad.service.closure.LedgerVerificationException;
 import com.rokad.service.closure.StaleVerificationException;
@@ -42,6 +43,12 @@ public class GlobalExceptionHandler {
   public ResponseEntity<ErrorResponse> handle(SavedLedgerNotFoundException ex) {
     return ResponseEntity.status(HttpStatus.NOT_FOUND)
         .body(ErrorResponse.of("NOT_FOUND", ex.getMessage()));
+  }
+
+  @ExceptionHandler(BackupInvalidException.class)
+  public ResponseEntity<ErrorResponse> handle(BackupInvalidException ex) {
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+        .body(ErrorResponse.of("VALIDATION_ERROR", "backup", ex.getMessage()));
   }
 
   @ExceptionHandler(ClosedLedgerModificationException.class)
