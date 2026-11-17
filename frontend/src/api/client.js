@@ -9,13 +9,16 @@ export class ApiError extends Error {
   }
 }
 
-export async function request(path, { method = 'GET', body } = {}) {
+// rawBody sends text exactly as given (a backup file must not be re-written on the way out), and
+// asText returns the answer as text for the same reason. Everything else is plain JSON.
+export async function request(path, { method = 'GET', body, rawBody, asText = false } = {}) {
+  const payload = rawBody !== undefined ? rawBody : body === undefined ? undefined : JSON.stringify(body)
   let response
   try {
     response = await fetch(`${BASE_URL}${path}`, {
       method,
-      headers: body === undefined ? undefined : { 'Content-Type': 'application/json' },
-      body: body === undefined ? undefined : JSON.stringify(body)
+      headers: payload === undefined ? undefined : { 'Content-Type': 'application/json' },
+      body: payload
     })
   } catch {
     throw new ApiError(0, {
@@ -25,6 +28,7 @@ export async function request(path, { method = 'GET', body } = {}) {
   }
 
   if (response.status === 204) return null
+  if (asText && response.ok) return response.text()
   const data = await response.json().catch(() => null)
   if (!response.ok) throw new ApiError(response.status, data)
   return data
@@ -74,4 +78,29 @@ export function verifyPeriod(period) {
 
 export function closeLedger(closing) {
   return request('/api/ledger/close', { method: 'POST', body: closing })
+}
+
+export function listSavedLedgers() {
+  return request('/api/ledgers')
+}
+
+export function getSavedLedger(ledgerId) {
+  return request(`/api/ledgers/${ledgerId}`)
+}
+
+export function getAppInfo() {
+  return request('/api/app/info')
+}
+
+// The three backup calls pass the file around as text, never as a parsed object.
+export function exportBackup() {
+  return request('/api/backup/export', { asText: true })
+}
+
+export function inspectBackup(text) {
+  return request('/api/backup/inspect', { method: 'POST', rawBody: text })
+}
+
+export function restoreBackup(text) {
+  return request('/api/backup/restore', { method: 'POST', rawBody: text })
 }
