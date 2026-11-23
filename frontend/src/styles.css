@@ -728,3 +728,62 @@ button.close-action:disabled {
 .activity-more a {
   color: var(--accent);
 }
+
+/* ---- Saved Ledgers (Phase 13) ---- */
+.saved-ledgers,
+.saved-detail {
+  max-width: 72rem;
+}
+
+/* Lets the two-sided layout stack below 760 px, the same rule Current Ledger follows. */
+.saved-detail {
+  container: ledger / inline-size;
+}
+
+.saved-intro {
+  margin: 0 0 0.5rem;
+  color: var(--muted);
+}
+
+.saved-title {
+  margin: 0;
+}
+
+.saved-period {
+  margin: 0.15rem 0 0.75rem;
+  color: var(--muted);
+}
+
+.saved-ledgers .table-scroll {
+  max-height: none;
+  font-size: 0.92rem;
+}
+
+.saved-ledgers .table-scroll th,
+.saved-ledgers .table-scroll td {
+  padding-inline: 0.4rem;
+}
+
+.saved-ledgers .table-scroll th[scope='row'] {
+  min-width: 7rem;
+  font-weight: 600;
+}
+
+.saved-ledgers .amount {
+  white-space: nowrap;
+}
+
+.nowrap {
+  white-space: nowrap;
+}
+
+.status-tag {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: var(--muted);
+}
+
+.saved-detail .summary-strip {
+  margin-bottom: 0.75rem;
+}

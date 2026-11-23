@@ -4,6 +4,7 @@ import LedgerGate from './components/LedgerGate'
 import CurrentLedger from './screens/CurrentLedger'
 import Dashboard from './screens/Dashboard'
 import Home from './screens/Home'
+import SavedLedgerDetail from './screens/SavedLedgerDetail'
 import SavedLedgers from './screens/SavedLedgers'
 import Settings from './screens/Settings'
 import VerifyCloseLedger from './screens/VerifyCloseLedger'
@@ -27,6 +28,7 @@ function App() {
                   <Route path="current-ledger" element={<CurrentLedger />} />
                   <Route path="verify-close" element={<VerifyCloseLedger />} />
                   <Route path="saved-ledgers" element={<SavedLedgers />} />
+                  <Route path="saved-ledgers/:ledgerId" element={<SavedLedgerDetail />} />
                   <Route path="settings" element={<Settings />} />
                   <Route path="*" element={<Navigate to="/" replace />} />
                 </Route>
