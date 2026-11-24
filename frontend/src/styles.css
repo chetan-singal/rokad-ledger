@@ -787,3 +787,112 @@ button.close-action:disabled {
 .saved-detail .summary-strip {
   margin-bottom: 0.75rem;
 }
+
+/* ---- Settings, restore (Phase 13) ---- */
+.settings {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1rem;
+  max-width: 48rem;
+}
+
+.settings-section {
+  padding: 1rem 1.1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.settings-section h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.1rem;
+}
+
+.settings-section p {
+  margin: 0.4rem 0;
+}
+
+.settings-section select,
+.settings-section button {
+  padding: 0.4rem 0.8rem;
+  font: inherit;
+}
+
+.settings-section select {
+  max-width: 100%;
+}
+
+.settings-hint {
+  color: var(--muted);
+}
+
+.storage-list {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0;
+}
+
+.storage-list div {
+  display: grid;
+  grid-template-columns: minmax(8rem, 12rem) 1fr;
+  gap: 0.5rem;
+}
+
+.storage-list dt {
+  font-weight: 600;
+}
+
+.storage-list dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.restore-panel input[type='file'] {
+  padding: 0.35rem;
+}
+
+.restore-review {
+  margin: 0.75rem 0;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.restore-review h3 {
+  margin: 0 0 0.4rem;
+  overflow-wrap: anywhere;
+}
+
+.restore-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 0.6rem;
+}
+
+.restore-done {
+  margin: 0.5rem 0;
+}
+
+.setup-restore {
+  margin-top: 2rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border);
+}
+
+.setup-restore h2 {
+  margin: 0 0 0.4rem;
+  font-size: 1.1rem;
+}
+
+.setup-restore button {
+  padding: 0.4rem 0.8rem;
+  font: inherit;
+}
+
+@media (max-width: 40rem) {
+  .storage-list div {
+    grid-template-columns: 1fr;
+    gap: 0.1rem;
+  }
+}

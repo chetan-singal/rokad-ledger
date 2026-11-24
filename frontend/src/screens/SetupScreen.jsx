@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import Field from '../components/Field'
+import RestorePanel from '../components/RestorePanel'
 import { setupLedger } from '../api/client'
 import { todayIso } from '../format'
 import { useLedger } from '../state/LedgerContext'
@@ -108,6 +109,15 @@ export default function SetupScreen() {
           {submitting ? 'Creating…' : 'Create ledger'}
         </button>
       </form>
+
+      <section className="setup-restore" aria-labelledby="setup-restore-heading">
+        <h2 id="setup-restore-heading">Already have a ROKAD backup?</h2>
+        <p>
+          Restore it instead of starting a new ledger. This is how you carry on after reinstalling
+          ROKAD or moving to another computer.
+        </p>
+        <RestorePanel />
+      </section>
     </main>
   )
 }
